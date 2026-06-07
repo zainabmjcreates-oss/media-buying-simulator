@@ -1,0 +1,16 @@
+{
+  "name": "محاكي الميديا باينج",
+  "short_name": "ميديا باينج",
+  "description": "لعبة تعليمية لاحتراف شراء الإعلانات الرقمية",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1020",
+  "theme_color": "#0b1020",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
