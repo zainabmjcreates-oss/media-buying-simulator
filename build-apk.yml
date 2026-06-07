@@ -1,0 +1,93 @@
+name: بناء ونشر التطبيق
+
+# يعمل تلقائياً عند رفع الملفات، أو يدوياً من تبويب Actions
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+# صلاحيات لازمة لنشر Releases و GitHub Pages
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  # ── بناء تطبيق أندرويد ونشره في Releases ──
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: جلب الملفات
+        uses: actions/checkout@v4
+
+      - name: تجهيز Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: تجهيز Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: تجهيز Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: تثبيت الاعتماديات
+        run: npm install
+
+      - name: إضافة منصة أندرويد
+        run: npx cap add android
+
+      - name: مزامنة Capacitor
+        run: npx cap sync android
+
+      - name: بناء الـ APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: إعادة تسمية الـ APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk media-buying-simulator.apk
+
+      - name: رفع الـ APK (Artifact للتحميل المباشر)
+        uses: actions/upload-artifact@v4
+        with:
+          name: media-buying-simulator-apk
+          path: media-buying-simulator.apk
+          retention-days: 90
+
+      - name: نشر الـ APK في Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: محاكي الميديا باينج v1.0.${{ github.run_number }}
+          body: |
+            تطبيق محاكي الميديا باينج لأندرويد.
+            حمّل الملف **media-buying-simulator.apk** وثبّته على هاتفك.
+            (نسخة تجربة debug — للتثبيت الشخصي)
+          files: media-buying-simulator.apk
+
+  # ── نشر النسخة الويب على GitHub Pages ──
+  deploy-web:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: جلب الملفات
+        uses: actions/checkout@v4
+
+      - name: تجهيز Pages
+        uses: actions/configure-pages@v5
+
+      - name: رفع ملفات الويب
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: www
+
+      - name: النشر على GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
