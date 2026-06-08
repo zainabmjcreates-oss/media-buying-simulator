@@ -1,19 +1,16 @@
 name: بناء ونشر التطبيق
 
-# يعمل تلقائياً عند رفع الملفات، أو يدوياً من تبويب Actions
 on:
   push:
     branches: [ main, master ]
   workflow_dispatch:
 
-# صلاحيات لازمة لنشر Releases و GitHub Pages
 permissions:
   contents: write
   pages: write
   id-token: write
 
 jobs:
-  # ── بناء تطبيق أندرويد ونشره في Releases ──
   build-apk:
     runs-on: ubuntu-latest
     steps:
@@ -33,6 +30,14 @@ jobs:
 
       - name: تجهيز Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          api-level: 34
+          build-tools-version: 34.0.0
+
+      - name: تجهيز Gradle Cache
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: wrapper
 
       - name: تثبيت الاعتماديات
         run: npm install
@@ -47,12 +52,15 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --no-daemon --stacktrace
+        env:
+          JAVA_OPTS: -Xmx2g
+          GRADLE_OPTS: -Xmx2g -Dorg.gradle.parallel=true
 
       - name: إعادة تسمية الـ APK
         run: cp android/app/build/outputs/apk/debug/app-debug.apk media-buying-simulator.apk
 
-      - name: رفع الـ APK (Artifact للتحميل المباشر)
+      - name: رفع الـ APK (Artifact)
         uses: actions/upload-artifact@v4
         with:
           name: media-buying-simulator-apk
@@ -67,10 +75,9 @@ jobs:
           body: |
             تطبيق محاكي الميديا باينج لأندرويد.
             حمّل الملف **media-buying-simulator.apk** وثبّته على هاتفك.
-            (نسخة تجربة debug — للتثبيت الشخصي)
+            (نسخة تجربة debug)
           files: media-buying-simulator.apk
 
-  # ── نشر النسخة الويب على GitHub Pages ──
   deploy-web:
     runs-on: ubuntu-latest
     environment:
