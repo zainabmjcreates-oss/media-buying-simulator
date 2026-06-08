@@ -2,9 +2,12 @@
   "appId": "com.mediabuying.simulator",
   "appName": "محاكي الميديا باينج",
   "webDir": "www",
-  "backgroundColor": "#0b1020",
-  "android": {
-    "backgroundColor": "#0b1020",
-    "allowMixedContent": false
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0
+    }
   }
 }
