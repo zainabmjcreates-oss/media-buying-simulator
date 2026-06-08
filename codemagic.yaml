@@ -1,0 +1,25 @@
+workflows:
+  android-build:
+    name: Android APK Build
+    max_build_duration: 60
+    environment:
+      node: 20
+      java: 17
+    scripts:
+      - name: Install dependencies
+        script: npm install
+      - name: Add Android platform
+        script: npx cap add android
+      - name: Sync Capacitor
+        script: npx cap sync android
+      - name: Copy www into android assets
+        script: |
+          mkdir -p android/app/src/main/assets/public
+          cp -r www/. android/app/src/main/assets/public/
+      - name: Build APK
+        script: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+    artifacts:
+      - android/app/build/outputs/apk/debug/app-debug.apk
